@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universal Voice AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  height: 100vh;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 30%, #24243e 60%, #667eea 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  overflow: hidden;
+  position: relative;
+  perspective: 1000px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(123, 104, 238, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(255, 0, 127, 0.05) 0%, transparent 50%);
+  animation: shift 15s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes shift {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(30px, 30px);
+  }
+}
+
+.lock-screen {
+  text-align: center;
+  padding: 60px 50px;
+  border-radius: 30px;
+  background: rgba(15, 12, 41, 0.6);
+  backdrop-filter: blur(20px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    0 0 40px rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  max-width: 500px;
+  animation: fadeInScale 0.8s ease-out;
+  position: relative;
+  z-index: 1;
+  box-shadow: 
+    0 0 60px rgba(0, 212, 255, 0.15),
+    0 0 100px rgba(123, 104, 238, 0.1);
+}
+
+.lock-screen.hidden {
+  display: none;
+}
+
+.lock-screen h2 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #00d4ff 0%, #7b68ee 50%, #ff006e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+.lock-screen p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+  min-height: 40px;
+}
+
+.lock-screen .status-text {
+  font-size: 14px;
+  color: rgba(0, 212, 255, 0.8);
+  margin-bottom: 20px;
+  min-height: 20px;
+  letter-spacing: 1px;
+}
+
+.lock-screen .status-text.listening {
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+.lock-screen .status-text.error {
+  color: #ff006e;
+  font-weight: 600;
+}
+
+.lock-screen button {
+  padding: 15px 40px;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #00d4ff 0%, #7b68ee 50%, #ff006e 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 20px;
+}
+
+.lock-screen button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+}
+
+.lock-screen button:active {
+  transform: translateY(0px);
+}
+
+.lock-screen button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.ai-container {
+  text-align: center;
+  padding: 60px 50px;
+  border-radius: 30px;
+  background: rgba(15, 12, 41, 0.6);
+  backdrop-filter: blur(20px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    0 0 40px rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  max-width: 550px;
+  animation: fadeInScale 0.8s ease-out;
+  position: relative;
+  z-index: 1;
+  box-shadow: 
+    0 0 60px rgba(0, 212, 255, 0.15),
+    0 0 100px rgba(123, 104, 238, 0.1);
+}
+
+.ai-container.hidden {
+  display: none;
+}
+
+h1 {
+  font-size: 42px;
+  margin: 20px 0 15px 0;
+  background: linear-gradient(135deg, #00d4ff 0%, #7b68ee 50%, #ff006e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 3px;
+  font-weight: 700;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+}
+
+.subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 2px;
+  margin-bottom: 35px;
+  text-transform: uppercase;
+  font-weight: 300;
+}
+
+.ring {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  position: relative;
+  margin: 0 auto 35px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-style: preserve-3d;
+  animation: float 3s ease-in-out infinite, rotate3d 12s linear infinite;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+  cursor: pointer;
+}
+
+.ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 5px solid transparent;
+  border-top: 5px solid rgba(0, 212, 255, 0.8);
+  border-right: 5px solid rgba(123, 104, 238, 0.6);
+  border-bottom: 5px solid rgba(255, 0, 110, 0.4);
+  border-left: 5px solid rgba(0, 212, 255, 0.2);
+  box-shadow: 
+    0 0 100px rgba(0, 212, 255, 0.9),
+    inset 0 0 80px rgba(123, 104, 238, 0.4),
+    inset 20px 20px 60px rgba(0, 212, 255, 0.3),
+    inset -20px -20px 60px rgba(123, 104, 238, 0.1);
+  animation: spinRing 8s linear infinite;
+}
+
+.ring::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 212, 255, 0.15);
+  box-shadow: 
+    inset 0 0 40px rgba(0, 212, 255, 0.2),
+    0 0 60px rgba(123, 104, 238, 0.2);
+  animation: spinRing 12s linear infinite reverse;
+}
+
+.ring-inner {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 212, 255, 0.4), rgba(123, 104, 238, 0.1));
+  box-shadow: 
+    inset -30px -30px 60px rgba(0, 0, 0, 0.5),
+    inset 30px 30px 60px rgba(0, 212, 255, 0.3),
+    0 0 60px rgba(0, 212, 255, 0.4);
+  animation: pulse 2s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+.ring-inner::before {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.8), transparent);
+  filter: blur(8px);
+  animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes spinRing {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes rotate3d {
+  0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  50% { transform: rotateX(10deg) rotateY(20deg) rotateZ(180deg); }
+  100% { transform: rotateX(0deg) rotateY(0deg) rotateZ(360deg); }
+}
+
+@keyframes pulse {
+  0% { 
+    transform: scale(1);
+    box-shadow: 
+      inset -30px -30px 60px rgba(0, 0, 0, 0.5),
+      inset 30px 30px 60px rgba(0, 212, 255, 0.3),
+      0 0 60px rgba(0, 212, 255, 0.4);
+  }
+  50% { 
+    transform: scale(1.08);
+    box-shadow: 
+      inset -30px -30px 60px rgba(0, 0, 0, 0.6),
+      inset 30px 30px 60px rgba(0, 212, 255, 0.5),
+      0 0 100px rgba(0, 212, 255, 0.6);
+  }
+  100% { 
+    transform: scale(1);
+    box-shadow: 
+      inset -30px -30px 60px rgba(0, 0, 0, 0.5),
+      inset 30px 30px 60px rgba(0, 212, 255, 0.3),
+      0 0 60px rgba(0, 212, 255, 0.4);
+  }
+}
+
+@keyframes shine {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.status {
+  margin-top: 30px;
+  font-size: 14px;
+  color: rgba(0, 212, 255, 0.8);
+  min-height: 20px;
+  letter-spacing: 1px;
+  animation: fadeIn 0.5s ease;
+}
+
+.status.listening {
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+.status.thinking {
+  color: #7b68ee;
+  font-weight: 600;
+}
+
+.status.error {
+  color: #ff006e;
+  font-weight: 600;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .ai-container,
+  .lock-screen {
+    padding: 40px 30px;
+    margin: 20px;
+  }
+
+  h1 {
+    font-size: 28px;
+    letter-spacing: 2px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .ring {
+    width: 200px;
+    height: 200px;
+  }
+
+  .ring-inner {
+    width: 130px;
+    height: 130px;
+  }
+}
+</style>
+<body>
+
+<!-- Lock Screen -->
+<div class="lock-screen" id="lockScreen">
+  <h2>🔐 Voice Lock</h2>
+  <p id="lockMessage">Say the keyword to unlock</p>
+  <div class="status-text" id="lockStatus"></div>
+  <button id="startBtn" onclick="startKeywordAuth()">🎤 Start Voice Auth</button>
+</div>
+
+<!-- AI Container -->
+<div class="ai-container hidden" id="aiContainer">
+  <div class="ring">
+    <div class="ring-inner"></div>
+  </div>
+  <h1>Universal AI Voice Bot</h1>
+  <p class="subtitle">Click circle to talk</p>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const KEYWORD = "hadi"; // Change this to your desired keyword
+
+// Voice recognition setup
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = "en-US";
+recognition.continuous = false;
+let isAuthMode = false; // Track if we're in auth mode
+
+function speak(text) {
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "en-US";
+  speech.rate = 1;
+  speech.pitch = 1;
+  window.speechSynthesis.speak(speech);
+}
+
+function startKeywordAuth() {
+  isAuthMode = true;
+  const lockStatus = document.getElementById("lockStatus");
+  const startBtn = document.getElementById("startBtn");
+  
+  lockStatus.textContent = "🎤 Listening for keyword...";
+  lockStatus.className = "status-text listening";
+  startBtn.disabled = true;
+  
+  speak("Please say the keyword to unlock");
+  setTimeout(() => {
+    recognition.start();
+  }, 500);
+}
+
+// Handle speech recognition results
+recognition.onresult = function(event) {
+  const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+  const lockStatus = document.getElementById("lockStatus");
+  const startBtn = document.getElementById("startBtn");
+  
+  if (isAuthMode) {
+    if (transcript.includes(KEYWORD)) {
+      lockStatus.textContent = "✓ Keyword verified! Unlocking...";
+      lockStatus.className = "status-text";
+      speak("Keyword verified. Access granted");
+      
+      setTimeout(() => {
+        document.getElementById("lockScreen").classList.add("hidden");
+        document.getElementById("aiContainer").classList.remove("hidden");
+      }, 1000);
+    } else {
+      lockStatus.textContent = "❌ Wrong keyword! Try again.";
+      lockStatus.className = "status-text error";
+      speak("Sorry, that's not the correct keyword. Please try again");
+      
+      setTimeout(() => {
+        startBtn.disabled = false;
+        lockStatus.textContent = "";
+      }, 2000);
+    }
+    isAuthMode = false;
+  } else {
+    // AI mode - handle regular conversation
+    const userText = transcript;
+    console.log("User:", userText);
+    
+    const statusEl = document.getElementById("status");
+    statusEl.textContent = "🤖 Thinking...";
+    statusEl.className = "status thinking";
+
+    askAI(userText).then(aiReply => {
+      statusEl.textContent = "✓ Speaking...";
+      speak(aiReply);
+      
+      setTimeout(() => {
+        statusEl.textContent = "";
+      }, 2000);
+    });
+  }
+};
+
+recognition.onerror = function(event) {
+  const lockStatus = document.getElementById("lockStatus");
+  const statusEl = document.getElementById("status");
+  const startBtn = document.getElementById("startBtn");
+  
+  if (isAuthMode) {
+    lockStatus.textContent = "❌ Error! Please try again.";
+    lockStatus.className = "status-text error";
+    startBtn.disabled = false;
+    speak("Sorry, I didn't catch that. Please try again");
+  } else {
+    statusEl.textContent = "❌ Error! Try again.";
+    statusEl.className = "status error";
+    speak("Sorry, I did not understand");
+  }
+};
+
+// Click ring to start listening (after unlocked)
+document.addEventListener("DOMContentLoaded", function() {
+  const ring = document.querySelector(".ring");
+  if (ring) {
+    ring.addEventListener("click", function() {
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = "🎤 Listening...";
+      statusEl.className = "status listening";
+      speak("I am listening");
+      isAuthMode = false;
+      recognition.start();
+    });
+  }
+});
+
+async function askAI(question) {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer YOUR_API_KEY_HERE"
+    },
+    body: JSON.stringify({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: "You are a helpful universal voice assistant. Answer briefly and clearly." },
+        { role: "user", content: question }
+      ]
+    })
+  });
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+</script>
+
+</body>
+</html>
